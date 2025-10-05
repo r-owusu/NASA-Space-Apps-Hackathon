@@ -232,4 +232,4 @@ st.markdown(
     </div>
     """, 
     unsafe_allow_html=True
-)
+)streamlit run enhanced_app_interactive.py --server.port 8512streamlit run enhanced_app_interactive.py --server.port 8512
