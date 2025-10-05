@@ -1,0 +1,26 @@
+{
+  "config": {
+    "n_events_per_messenger": 10000,
+    "n_true_sources": 2000,
+    "time_span_days": 7,
+    "seed": 42,
+    "out_dir": "synthetic_multimessenger_data",
+    "max_pairs_per_pair": 20000,
+    "time_window_seconds": 300,
+    "max_angular_sep_deg": 20.0,
+    "chunk_size": 2000,
+    "test_mode": true
+  },
+  "pair_counts": {
+    "GW-Gamma": 3678,
+    "GW-Neutrino": 3455,
+    "GW-Optical": 3718,
+    "GW-Radio": 3448,
+    "Gamma-Neutrino": 3502,
+    "Gamma-Optical": 3856,
+    "Gamma-Radio": 3681,
+    "Neutrino-Optical": 3540,
+    "Neutrino-Radio": 3432,
+    "Optical-Radio": 3707
+  }
+}
