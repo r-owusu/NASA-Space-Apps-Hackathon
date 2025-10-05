@@ -78,20 +78,22 @@ df = None
 if input_method == "📁 Load sample/demo data":
     # Demo data generation
     if st.button("🎲 Generate Demo Data", type="primary"):
-        # Generate sample data with correct column names
+        # Generate sample data
         np.random.seed(42)
         n_pairs = 100
         
-        # Generate the three features the model expects
         data = {
-            'dt': np.abs(np.random.normal(0, 1000, n_pairs)),  # time difference
-            'dtheta': np.random.exponential(1.0, n_pairs),     # angular separation
-            'strength_ratio': np.random.exponential(2, n_pairs) # signal strength ratio
+            'gamma_signal_strength': np.random.exponential(2, n_pairs),
+            'neutrino_signal_strength': np.random.exponential(1.5, n_pairs),
+            'position_error_gamma': np.random.exponential(0.5, n_pairs),
+            'position_error_neutrino': np.random.exponential(0.8, n_pairs),
+            'time_difference': np.abs(np.random.normal(0, 1000, n_pairs)),
+            'angular_separation': np.random.exponential(1.0, n_pairs)
         }
         
         df = pd.DataFrame(data)
         st.session_state.current_data = df
-        st.success(f"✅ Generated {len(df)} sample pairs with correct format")
+        st.success(f"✅ Generated {len(df)} sample pairs")
 
 elif input_method == "📂 Upload CSV file":
     uploaded_file = st.file_uploader(
@@ -124,15 +126,9 @@ if df is not None:
     with col2:
         st.metric("Features", len(df.columns))
     with col3:
-        if 'strength_ratio' in df.columns:
-            st.metric("Mean Strength Ratio", f"{df['strength_ratio'].mean():.2f}")
-        else:
-            st.metric("Data Loaded", "✅")
+        st.metric("Mean Signal Strength", f"{df['gamma_signal_strength'].mean():.2f}")
     with col4:
-        if 'dt' in df.columns:
-            st.metric("Mean Time Diff", f"{df['dt'].mean():.0f}s")
-        else:
-            st.metric("Ready", "✅")
+        st.metric("Mean Time Diff", f"{df['time_difference'].mean():.0f}s")
 
 # Analysis section
 st.header("🔬 AI Analysis")
@@ -155,15 +151,15 @@ if df is not None and model is not None:
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
-                        associated = (results['pred_prob'] > threshold).sum()
+                        associated = (results['probability'] > threshold).sum()
                         st.metric("Associated Pairs", associated)
                     
                     with col2:
-                        max_prob = results['pred_prob'].max()
+                        max_prob = results['probability'].max()
                         st.metric("Max Probability", f"{max_prob:.3f}")
                     
                     with col3:
-                        avg_prob = results['pred_prob'].mean()
+                        avg_prob = results['probability'].mean()
                         st.metric("Average Probability", f"{avg_prob:.3f}")
                     
                     # Detailed results
@@ -171,7 +167,7 @@ if df is not None and model is not None:
                     
                     # Add association status
                     results_display = results.copy()
-                    results_display['Associated'] = results_display['pred_prob'] > threshold
+                    results_display['Associated'] = results_display['probability'] > threshold
                     results_display['Associated'] = results_display['Associated'].map({True: '✅ Yes', False: '❌ No'})
                     
                     st.dataframe(results_display, use_container_width=True)
@@ -181,10 +177,10 @@ if df is not None and model is not None:
                     
                     fig = px.histogram(
                         results, 
-                        x='pred_prob',
+                        x='probability',
                         nbins=20,
                         title="Distribution of Association Probabilities",
-                        labels={'pred_prob': 'Association Probability', 'count': 'Number of Pairs'}
+                        labels={'probability': 'Association Probability', 'count': 'Number of Pairs'}
                     )
                     fig.add_vline(x=threshold, line_dash="dash", line_color="red", 
                                 annotation_text=f"Threshold ({threshold})")
@@ -212,15 +208,15 @@ if st.session_state.results is not None and df is not None:
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        associated = (results['pred_prob'] > threshold).sum()
+        associated = (results['probability'] > threshold).sum()
         st.metric("Associated Pairs", associated)
     
     with col2:
-        max_prob = results['pred_prob'].max()
+        max_prob = results['probability'].max()
         st.metric("Max Probability", f"{max_prob:.3f}")
     
     with col3:
-        avg_prob = results['pred_prob'].mean()
+        avg_prob = results['probability'].mean()
         st.metric("Average Probability", f"{avg_prob:.3f}")
 
 # Footer
