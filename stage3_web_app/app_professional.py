@@ -248,7 +248,7 @@ def load_selected_model(model_name):
 def predict_events(df, model, scaler=None, threshold=0.5):
     """Enhanced prediction function with same/different event classification"""
     try:
-        # Prepare features for prediction - match training feature engineering
+        # Prepare features for prediction
         feature_columns = ['dt', 'dtheta', 'strength_ratio']
         available_columns = [col for col in feature_columns if col in df.columns]
         
@@ -260,37 +260,6 @@ def predict_events(df, model, scaler=None, threshold=0.5):
         
         # Handle missing values
         X = X.fillna(X.mean())
-        
-        # Feature engineering to match training data
-        # Add log_strength_ratio (same as in training)
-        X['log_strength_ratio'] = np.sign(X['strength_ratio']) * np.log1p(np.abs(X['strength_ratio']))
-        
-        # Add pair type dummy variables (create default values if not present)
-        pair_types = ['pair_GW_Neutrino', 'pair_GW_Optical', 'pair_GW_Radio', 'pair_Gamma_Neutrino']
-        
-        # If we have pair information in the data, use it
-        if 'pair' in df.columns:
-            pair_dummies = pd.get_dummies(df['pair'], prefix='pair', drop_first=True)
-            for pair_type in pair_types:
-                if pair_type in pair_dummies.columns:
-                    X[pair_type] = pair_dummies[pair_type]
-                else:
-                    X[pair_type] = 0
-        else:
-            # Create default dummy variables (assuming mixed event types)
-            for pair_type in pair_types:
-                X[pair_type] = 0
-            # Set a default pair type for demo data
-            X['pair_Gamma_Neutrino'] = 1  # Default to Gamma-Neutrino pairs
-        
-        # Ensure we have all expected features in the right order
-        expected_features = ['dt', 'dtheta', 'strength_ratio', 'log_strength_ratio'] + pair_types
-        for feature in expected_features:
-            if feature not in X.columns:
-                X[feature] = 0
-        
-        # Reorder columns to match training
-        X = X[expected_features]
         
         # Apply scaling if scaler is available
         if scaler is not None:
@@ -467,25 +436,13 @@ with col1:
                     'detection_time': pd.date_range('2025-01-01', periods=n_pairs, freq='H')
                 }
                 
-                # Add pair type information to match training data
+                # Add event-specific parameters
                 if event_type == "Gamma-Neutrino":
-                    data['pair'] = ['Gamma_Neutrino'] * n_pairs
-                    data['m1'] = ['Gamma'] * n_pairs
-                    data['m2'] = ['Neutrino'] * n_pairs
                     data['gamma_energy_gev'] = np.random.lognormal(2, 1, n_pairs)
                     data['neutrino_energy_gev'] = np.random.lognormal(3, 1.5, n_pairs)
                 elif event_type == "GW-Optical":
-                    data['pair'] = ['GW_Optical'] * n_pairs
-                    data['m1'] = ['GW'] * n_pairs
-                    data['m2'] = ['Optical'] * n_pairs
                     data['gw_strain'] = np.random.lognormal(-21, 0.5, n_pairs)
                     data['optical_magnitude'] = np.random.normal(20, 2, n_pairs)
-                else:  # Mixed Events
-                    # Create a mix of different pair types
-                    pair_types = ['Gamma_Neutrino', 'GW_Optical', 'GW_Neutrino', 'GW_Radio']
-                    data['pair'] = np.random.choice(pair_types, n_pairs)
-                    data['m1'] = [p.split('_')[0] for p in data['pair']]
-                    data['m2'] = [p.split('_')[1] for p in data['pair']]
                 
                 df = pd.DataFrame(data)
                 st.session_state.current_data = df
