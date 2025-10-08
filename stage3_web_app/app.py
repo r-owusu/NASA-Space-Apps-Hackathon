@@ -31,34 +31,34 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for modern pink-themed UI
+# Custom CSS for modern violet-themed UI
 st.markdown("""
 <style>
     /* Main app background */
     .stApp {
-        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+        background: linear-gradient(135deg, #9c88ff 0%, #c8b3ff 50%, #e1d5ff 100%);
     }
     
     .main-header {
-        background: linear-gradient(90deg, #ff6b9d 0%, #c44569 100%);
+        background: linear-gradient(90deg, #7c4dff 0%, #512da8 100%);
         padding: 2rem;
         border-radius: 15px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
-        box-shadow: 0 8px 32px rgba(255, 107, 157, 0.3);
+        box-shadow: 0 8px 32px rgba(124, 77, 255, 0.3);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .metric-card {
-        background: linear-gradient(135deg, #ff6b9d 0%, #ff8a80 100%);
+        background: linear-gradient(135deg, #7c4dff 0%, #9575cd 100%);
         padding: 1.5rem;
         border-radius: 15px;
         color: white;
         text-align: center;
         margin: 0.5rem 0;
-        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        box-shadow: 0 4px 16px rgba(124, 77, 255, 0.3);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -66,7 +66,7 @@ st.markdown("""
     
     .metric-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 12px 24px rgba(255, 107, 157, 0.4);
+        box-shadow: 0 12px 24px rgba(124, 77, 255, 0.4);
     }
     
     .stTabs [data-baseweb="tab-list"] {
@@ -86,30 +86,30 @@ st.markdown("""
         backdrop-filter: blur(10px);
         padding: 1.5rem;
         border-radius: 15px;
-        border-left: 4px solid #ff6b9d;
+        border-left: 4px solid #7c4dff;
         margin: 1rem 0;
         border: 1px solid rgba(255, 255, 255, 0.2);
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
     
     .success-box {
-        background: linear-gradient(90deg, #ff6b9d 0%, #ff8a80 100%);
+        background: linear-gradient(90deg, #7c4dff 0%, #9575cd 100%);
         color: white;
         padding: 1.5rem;
         border-radius: 15px;
         margin: 1rem 0;
-        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        box-shadow: 0 4px 16px rgba(124, 77, 255, 0.3);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .warning-box {
-        background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
-        color: #8b1538;
+        background: linear-gradient(90deg, #b39ddb 0%, #d1c4e9 100%);
+        color: #4a148c;
         padding: 1.5rem;
         border-radius: 15px;
         margin: 1rem 0;
-        box-shadow: 0 4px 16px rgba(255, 154, 158, 0.3);
+        box-shadow: 0 4px 16px rgba(179, 157, 219, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.2);
         font-weight: 600;
     }
@@ -121,32 +121,32 @@ st.markdown("""
         border-radius: 15px;
         margin: 1rem 0;
         border: 1px solid rgba(255, 255, 255, 0.3);
-        color: #8b1538;
+        color: #4a148c;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
     
     /* Sidebar styling */
     .css-1d391kg {
-        background: linear-gradient(180deg, #ff6b9d 0%, #c44569 100%);
+        background: linear-gradient(180deg, #7c4dff 0%, #512da8 100%);
     }
     
     /* Button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #ff6b9d, #c44569);
+        background: linear-gradient(135deg, #7c4dff, #512da8);
         color: white;
         border: none;
         border-radius: 12px;
         padding: 0.75rem 1.5rem;
         font-weight: 600;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+        box-shadow: 0 4px 12px rgba(124, 77, 255, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .stButton > button:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(255, 107, 157, 0.4);
-        background: linear-gradient(135deg, #c44569, #ff6b9d);
+        box-shadow: 0 8px 20px rgba(124, 77, 255, 0.4);
+        background: linear-gradient(135deg, #512da8, #7c4dff);
     }
     
     /* Data frame styling */
@@ -164,27 +164,27 @@ st.markdown("""
     
     /* Prediction results */
     .prediction-same {
-        background: linear-gradient(135deg, #ff6b9d, #ff8a80);
+        background: linear-gradient(135deg, #7c4dff, #9575cd);
         color: white;
         padding: 1.5rem;
         border-radius: 15px;
         margin: 1rem 0;
         text-align: center;
         font-weight: 600;
-        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        box-shadow: 0 4px 16px rgba(124, 77, 255, 0.3);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .prediction-different {
-        background: linear-gradient(135deg, #fad0c4, #ff9a9e);
-        color: #8b1538;
+        background: linear-gradient(135deg, #d1c4e9, #b39ddb);
+        color: #4a148c;
         padding: 1.5rem;
         border-radius: 15px;
         margin: 1rem 0;
         text-align: center;
         font-weight: 600;
-        box-shadow: 0 4px 16px rgba(255, 154, 158, 0.3);
+        box-shadow: 0 4px 16px rgba(179, 157, 219, 0.3);
         border: 1px solid rgba(255, 255, 255, 0.2);
     }
 </style>
@@ -923,9 +923,20 @@ with tab3:
             )
             
             # Customization options
-            color_scheme = st.selectbox("Color scheme:", ["Viridis", "Plasma", "Cividis", "Magma", "Turbo", "Pink"])
+            color_scheme = st.selectbox("Color scheme:", ["Viridis", "Plasma", "Cividis", "Magma", "Turbo", "Purples"])
             show_threshold = st.checkbox("Show threshold line", True)
             interactive_mode = st.checkbox("Interactive mode", True)
+            
+            # Map color scheme names to plotly color scales
+            color_map = {
+                "Viridis": "Viridis",
+                "Plasma": "Plasma", 
+                "Cividis": "Cividis",
+                "Magma": "Magma",
+                "Turbo": "Turbo",
+                "Purples": "Purples"
+            }
+            plotly_color_scheme = color_map.get(color_scheme, "Viridis")
             
         with viz_col2:
             if viz_type == "📊 Probability Distribution":
@@ -967,7 +978,7 @@ with tab3:
                         'strength_ratio': 'Strength Ratio',
                         'pred_prob': 'Association Probability'
                     },
-                    color_continuous_scale=color_scheme
+                    color_continuous_scale=plotly_color_scheme
                 )
                 
                 fig.update_layout(
@@ -992,7 +1003,7 @@ with tab3:
                     fig = px.imshow(
                         corr_matrix,
                         title="🔗 Feature Correlation Matrix",
-                        color_continuous_scale=color_scheme,
+                        color_continuous_scale=plotly_color_scheme,
                         aspect="auto"
                     )
                     
@@ -1008,6 +1019,7 @@ with tab3:
                     st.warning("Not enough numeric columns for correlation analysis")
             
             elif viz_type == "⏱️ Time Series Analysis":
+                # Check for existing time columns or create synthetic time data
                 if 'detection_time' in results.columns or 'timestamp' in results.columns:
                     time_col = 'detection_time' if 'detection_time' in results.columns else 'timestamp'
                     
@@ -1024,9 +1036,11 @@ with tab3:
                         x='hour',
                         y='pred_prob',
                         title="⏰ Association Probability by Hour",
-                        labels={'hour': 'Hour of Day', 'pred_prob': 'Average Association Probability'}
+                        labels={'hour': 'Hour of Day', 'pred_prob': 'Average Association Probability'},
+                        line_shape="spline"
                     )
                     
+                    fig.update_traces(line_color='#7c4dff', line_width=3)
                     fig.update_layout(
                         plot_bgcolor='rgba(0,0,0,0)',
                         paper_bgcolor='rgba(0,0,0,0)',
@@ -1034,7 +1048,60 @@ with tab3:
                     
                     st.plotly_chart(fig, use_container_width=True)
                 else:
-                    st.info("Time data not available for time series analysis")
+                    # Create synthetic time series for demonstration
+                    st.info("📊 Creating synthetic time series analysis for demonstration")
+                    
+                    # Generate synthetic time data based on data indices
+                    time_results = results.copy()
+                    base_time = datetime.now() - timedelta(hours=len(results))
+                    time_results['synthetic_time'] = [base_time + timedelta(hours=i) for i in range(len(results))]
+                    time_results['hour'] = time_results['synthetic_time'].dt.hour
+                    
+                    # Create time series plot
+                    fig = px.line(
+                        time_results.reset_index(),
+                        x='index',
+                        y='pred_prob',
+                        title="⏰ Association Probability Over Event Sequence",
+                        labels={'index': 'Event Sequence', 'pred_prob': 'Association Probability'},
+                        line_shape="spline"
+                    )
+                    
+                    # Add threshold line
+                    if show_threshold:
+                        fig.add_hline(
+                            y=threshold, 
+                            line_dash="dash", 
+                            line_color="#d1c4e9",
+                            annotation_text=f"Threshold ({threshold})"
+                        )
+                    
+                    fig.update_traces(line_color='#7c4dff', line_width=3)
+                    fig.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Also show hourly pattern
+                    hourly_pattern = time_results.groupby('hour')['pred_prob'].mean().reset_index()
+                    
+                    fig2 = px.bar(
+                        hourly_pattern,
+                        x='hour',
+                        y='pred_prob',
+                        title="📊 Average Association Probability by Hour",
+                        labels={'hour': 'Hour of Day', 'pred_prob': 'Average Association Probability'}
+                    )
+                    
+                    fig2.update_traces(marker_color='#7c4dff')
+                    fig2.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                    )
+                    
+                    st.plotly_chart(fig2, use_container_width=True)
             
             elif viz_type == "🌌 Sky Map (3D)":
                 # Create a mock sky map using angular separation
@@ -1055,7 +1122,7 @@ with tab3:
                             marker=dict(
                                 size=8,
                                 color=results['pred_prob'],
-                                colorscale=color_scheme,
+                                colorscale=plotly_color_scheme,
                                 colorbar=dict(title="Association Probability"),
                                 showscale=True
                             ),
@@ -1094,7 +1161,7 @@ with tab3:
                             'dtheta': 'Angular Separation (°)',
                             'pred_prob': 'Association Probability'
                         },
-                        color_continuous_scale=color_scheme.lower()
+                        color_continuous_scale=plotly_color_scheme
                     )
                     
                     fig.update_layout(
@@ -1125,7 +1192,7 @@ with tab3:
                         color='pred_prob',
                         size='pred_prob',
                         title=f"🎯 {x_axis.title()} vs {y_axis.title()}",
-                        color_continuous_scale=color_scheme.lower(),
+                        color_continuous_scale=plotly_color_scheme,
                         hover_data=['dt', 'dtheta', 'strength_ratio']
                     )
                     
@@ -1217,8 +1284,8 @@ with tab3:
                         color='prediction',
                         title=f"📊 {selected_feature.title()} Distribution by Prediction",
                         color_discrete_map={
-                            'Same Event': '#ff6b9d',
-                            'Different Events': '#fad0c4'
+                            'Same Event': '#7c4dff',
+                            'Different Events': '#d1c4e9'
                         }
                     )
                     
