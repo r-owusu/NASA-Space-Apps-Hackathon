@@ -20,7 +20,7 @@ from sklearn.cluster import DBSCAN
 from sklearn.preprocessing import StandardScaler
 from scipy import stats
 import time
-from model_loader import list_model_files, load_model_by_name
+from model_loader import list_model_files, load_model_by_name, get_model_info
 from inference import predict_df
 
 # Page configuration
@@ -31,25 +31,42 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for modern UI
+# Custom CSS for modern pink-themed UI
 st.markdown("""
 <style>
+    /* Main app background */
+    .stApp {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+    }
+    
     .main-header {
-        background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%);
+        background: linear-gradient(90deg, #ff6b9d 0%, #c44569 100%);
         padding: 2rem;
-        border-radius: 10px;
+        border-radius: 15px;
         margin-bottom: 2rem;
         color: white;
         text-align: center;
+        box-shadow: 0 8px 32px rgba(255, 107, 157, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
     .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1rem;
-        border-radius: 10px;
+        background: linear-gradient(135deg, #ff6b9d 0%, #ff8a80 100%);
+        padding: 1.5rem;
+        border-radius: 15px;
         color: white;
         text-align: center;
         margin: 0.5rem 0;
+        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(255, 107, 157, 0.4);
     }
     
     .stTabs [data-baseweb="tab-list"] {
@@ -57,29 +74,118 @@ st.markdown("""
     }
     
     .stTabs [data-baseweb="tab"] {
-        background-color: #f0f2f6;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
         border-radius: 10px 10px 0 0;
         padding: 0.5rem 1rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
     .feature-box {
-        background: #f8f9fa;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
         padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 4px solid #667eea;
+        border-radius: 15px;
+        border-left: 4px solid #ff6b9d;
         margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
     }
     
     .success-box {
-        background: linear-gradient(90deg, #11998e 0%, #38ef7d 100%);
+        background: linear-gradient(90deg, #ff6b9d 0%, #ff8a80 100%);
         color: white;
-        padding: 1rem;
-        border-radius: 10px;
+        padding: 1.5rem;
+        border-radius: 15px;
         margin: 1rem 0;
+        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
     
-    .sidebar .sidebar-content {
-        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    .warning-box {
+        background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+        color: #8b1538;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        box-shadow: 0 4px 16px rgba(255, 154, 158, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-weight: 600;
+    }
+    
+    .info-box {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+        backdrop-filter: blur(10px);
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #8b1538;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Sidebar styling */
+    .css-1d391kg {
+        background: linear-gradient(180deg, #ff6b9d 0%, #c44569 100%);
+    }
+    
+    /* Button styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #ff6b9d, #c44569);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(255, 107, 157, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .stButton > button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 107, 157, 0.4);
+        background: linear-gradient(135deg, #c44569, #ff6b9d);
+    }
+    
+    /* Data frame styling */
+    .stDataFrame {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    /* Hide Streamlit elements */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    /* Prediction results */
+    .prediction-same {
+        background: linear-gradient(135deg, #ff6b9d, #ff8a80);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        text-align: center;
+        font-weight: 600;
+        box-shadow: 0 4px 16px rgba(255, 107, 157, 0.3);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .prediction-different {
+        background: linear-gradient(135deg, #fad0c4, #ff9a9e);
+        color: #8b1538;
+        padding: 1.5rem;
+        border-radius: 15px;
+        margin: 1rem 0;
+        text-align: center;
+        font-weight: 600;
+        box-shadow: 0 4px 16px rgba(255, 154, 158, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -101,14 +207,22 @@ st.sidebar.markdown("### 🤖 AI Model")
 model_files = list_model_files()
 
 if model_files:
+    # Extract just the filenames for display
+    model_names = [f[0] for f in model_files] if model_files and isinstance(model_files[0], tuple) else model_files
+    
     model_choice = st.sidebar.selectbox(
         "Choose trained model:",
-        model_files,
+        model_names,
         key="model_selector"
     )
 else:
     model_choice = None
-    st.sidebar.warning("No models found")
+    st.sidebar.markdown("""
+    <div class="warning-box">
+        ⚠️ <strong>No Models Found</strong><br>
+        Please ensure model files (.pkl) are available
+    </div>
+    """, unsafe_allow_html=True)
 
 # Initialize session state
 for key in ['current_data', 'results', 'api_data', 'clustering_results']:
@@ -123,16 +237,29 @@ metadata = None
 if model_choice:
     try:
         model, scaler, metadata = load_model_by_name(model_choice)
-        st.sidebar.success(f"✅ Model: {model_choice}")
+        st.sidebar.markdown(f"""
+        <div class="success-box">
+            ✅ <strong>Model Loaded Successfully</strong><br>
+            {model_choice}
+        </div>
+        """, unsafe_allow_html=True)
         
         if metadata:
             st.sidebar.markdown(f"""
-            **📊 Model Info:**
-            - Algorithm: {metadata.get('best_model', 'Unknown')}
-            - AUC Score: {metadata.get('best_auc', 'N/A'):.3f}
-            """)
+            <div class="info-box">
+                <h4 style="margin-bottom: 1rem;">📊 Model Information</h4>
+                <p><strong>Algorithm:</strong> {metadata.get('best_model', 'Unknown')}</p>
+                <p><strong>AUC Score:</strong> {metadata.get('best_auc', 'N/A'):.3f}</p>
+                <p><strong>Features:</strong> {len(metadata.get('feature_names', []))} columns</p>
+            </div>
+            """, unsafe_allow_html=True)
     except Exception as e:
-        st.sidebar.error(f"Error loading model: {e}")
+        st.sidebar.markdown(f"""
+        <div class="warning-box">
+            ❌ <strong>Model Loading Failed</strong><br>
+            {str(e)}
+        </div>
+        """, unsafe_allow_html=True)
         model = None
 
 # Analysis parameters
@@ -172,7 +299,7 @@ with tab1:
         
         input_method = st.radio(
             "Choose input method:",
-            ["🎲 Generate Demo Data", "📂 Upload CSV", "📋 Manual Entry"],
+            ["🎲 Generate Demo Data", "📂 Upload Files", "📋 Manual Entry", "🌐 Database Import", "📡 Real-time API"],
             horizontal=False
         )
     
@@ -245,20 +372,216 @@ with tab1:
             </div>
             """, unsafe_allow_html=True)
     
-    elif input_method == "📂 Upload CSV":
-        uploaded_file = st.file_uploader(
-            "Choose CSV file", 
-            type="csv",
-            help="Upload astronomical event data in CSV format"
+    elif input_method == "📂 Upload Files":
+        st.markdown("### 📁 File Upload Options")
+        
+        file_type = st.selectbox(
+            "Select file format:",
+            ["CSV Files (.csv)", "Excel Files (.xlsx, .xls)", "JSON Files (.json)", "Parquet Files (.parquet)"]
         )
         
-        if uploaded_file:
-            try:
-                df = pd.read_csv(uploaded_file)
-                st.session_state.current_data = df
-                st.success(f"✅ Loaded {len(df)} rows from {uploaded_file.name}")
-            except Exception as e:
-                st.error(f"Error reading file: {e}")
+        if file_type == "CSV Files (.csv)":
+            uploaded_file = st.file_uploader(
+                "Choose CSV file", 
+                type=["csv"],
+                help="Upload astronomical event data in CSV format"
+            )
+            
+            if uploaded_file:
+                try:
+                    # CSV options
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        separator = st.selectbox("Separator:", [",", ";", "\t", "|"])
+                    with col2:
+                        encoding = st.selectbox("Encoding:", ["utf-8", "latin-1", "cp1252"])
+                    
+                    df = pd.read_csv(uploaded_file, sep=separator, encoding=encoding)
+                    st.session_state.current_data = df
+                    
+                    st.markdown(f"""
+                    <div class="success-box">
+                    <h4>✅ CSV File Loaded Successfully</h4>
+                    <p>Filename: {uploaded_file.name} | Rows: {len(df)} | Columns: {len(df.columns)}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error reading CSV file: {e}")
+        
+        elif file_type == "Excel Files (.xlsx, .xls)":
+            uploaded_file = st.file_uploader(
+                "Choose Excel file", 
+                type=["xlsx", "xls"],
+                help="Upload astronomical event data in Excel format"
+            )
+            
+            if uploaded_file:
+                try:
+                    # Excel options
+                    sheet_names = pd.ExcelFile(uploaded_file).sheet_names
+                    selected_sheet = st.selectbox("Select sheet:", sheet_names)
+                    
+                    df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
+                    st.session_state.current_data = df
+                    
+                    st.markdown(f"""
+                    <div class="success-box">
+                    <h4>✅ Excel File Loaded Successfully</h4>
+                    <p>Sheet: {selected_sheet} | Rows: {len(df)} | Columns: {len(df.columns)}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error reading Excel file: {e}")
+        
+        elif file_type == "JSON Files (.json)":
+            uploaded_file = st.file_uploader(
+                "Choose JSON file", 
+                type=["json"],
+                help="Upload astronomical event data in JSON format"
+            )
+            
+            if uploaded_file:
+                try:
+                    json_data = json.load(uploaded_file)
+                    
+                    # Handle different JSON structures
+                    if isinstance(json_data, list):
+                        df = pd.DataFrame(json_data)
+                    elif isinstance(json_data, dict):
+                        if 'data' in json_data:
+                            df = pd.DataFrame(json_data['data'])
+                        else:
+                            df = pd.DataFrame([json_data])
+                    
+                    st.session_state.current_data = df
+                    
+                    st.markdown(f"""
+                    <div class="success-box">
+                    <h4>✅ JSON File Loaded Successfully</h4>
+                    <p>Filename: {uploaded_file.name} | Rows: {len(df)} | Columns: {len(df.columns)}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error reading JSON file: {e}")
+        
+        elif file_type == "Parquet Files (.parquet)":
+            uploaded_file = st.file_uploader(
+                "Choose Parquet file", 
+                type=["parquet"],
+                help="Upload astronomical event data in Parquet format"
+            )
+            
+            if uploaded_file:
+                try:
+                    df = pd.read_parquet(uploaded_file)
+                    st.session_state.current_data = df
+                    
+                    st.markdown(f"""
+                    <div class="success-box">
+                    <h4>✅ Parquet File Loaded Successfully</h4>
+                    <p>Filename: {uploaded_file.name} | Rows: {len(df)} | Columns: {len(df.columns)}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"Error reading Parquet file: {e}")
+    
+    elif input_method == "🌐 Database Import":
+        st.markdown("### 🗄️ Database Connection")
+        
+        db_type = st.selectbox(
+            "Database type:",
+            ["PostgreSQL", "MySQL", "SQLite", "MongoDB", "InfluxDB"]
+        )
+        
+        if db_type in ["PostgreSQL", "MySQL"]:
+            col1, col2 = st.columns(2)
+            with col1:
+                host = st.text_input("Host:", "localhost")
+                database = st.text_input("Database:", "astronomy")
+            with col2:
+                port = st.number_input("Port:", value=5432 if db_type == "PostgreSQL" else 3306)
+                table = st.text_input("Table/Collection:", "events")
+            
+            username = st.text_input("Username:")
+            password = st.text_input("Password:", type="password")
+            
+            if st.button("🔗 Connect & Import", type="primary"):
+                st.markdown("""
+                <div class="warning-box">
+                <h4>🚧 Database Connection Demo</h4>
+                <p>This is a demo interface. In production, this would connect to your actual database.</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        elif db_type == "SQLite":
+            uploaded_db = st.file_uploader("Upload SQLite database file", type=["db", "sqlite", "sqlite3"])
+            if uploaded_db:
+                st.info("SQLite database upload functionality would be implemented here.")
+    
+    elif input_method == "📡 Real-time API":
+        st.markdown("### 🌐 Real-time Data Sources")
+        
+        api_choice = st.selectbox(
+            "Select API source:",
+            ["GW Open Science Center", "GCN (Gamma-ray Coordinates Network)", "ANTARES", "Custom API"]
+        )
+        
+        if api_choice == "Custom API":
+            api_url = st.text_input("API Endpoint URL:")
+            api_key = st.text_input("API Key (optional):", type="password")
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                method = st.selectbox("HTTP Method:", ["GET", "POST"])
+            with col2:
+                timeout = st.number_input("Timeout (seconds):", value=30)
+            
+            if st.button("🔄 Fetch Data", type="primary") and api_url:
+                try:
+                    with st.spinner("Fetching data from API..."):
+                        headers = {}
+                        if api_key:
+                            headers["Authorization"] = f"Bearer {api_key}"
+                        
+                        # Mock API call for demo
+                        time.sleep(2)
+                        st.markdown("""
+                        <div class="info-box">
+                        <h4>📡 API Demo Mode</h4>
+                        <p>In production, this would fetch real data from your API endpoint.</p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"API Error: {e}")
+        
+        else:
+            if st.button(f"🔄 Fetch from {api_choice}", type="primary"):
+                with st.spinner(f"Connecting to {api_choice}..."):
+                    time.sleep(2)
+                    
+                    # Generate mock data for demo
+                    np.random.seed(42)
+                    n_events = np.random.randint(10, 50)
+                    
+                    api_data = {
+                        'dt': np.abs(np.random.normal(0, 800, n_events)),
+                        'dtheta': np.random.exponential(0.5, n_events),
+                        'strength_ratio': np.random.exponential(2.2, n_events),
+                        'event_id': [f"{api_choice.split()[0]}_{i:04d}" for i in range(n_events)],
+                        'source': [api_choice] * n_events,
+                        'timestamp': [datetime.now() - timedelta(hours=np.random.randint(0, 72)) for _ in range(n_events)],
+                        'confidence': np.random.uniform(0.6, 0.98, n_events)
+                    }
+                    
+                    df = pd.DataFrame(api_data)
+                    st.session_state.current_data = df
+                    
+                    st.markdown(f"""
+                    <div class="success-box">
+                    <h4>✅ API Data Retrieved Successfully</h4>
+                    <p>Source: {api_choice} | Events: {n_events} | Latest: {df['timestamp'].max().strftime('%Y-%m-%d %H:%M')}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
     
     elif input_method == "📋 Manual Entry":
         st.markdown("### Enter event pair data manually:")
@@ -387,7 +710,7 @@ with tab2:
                                 st.metric(
                                     "🔍 Reliability", 
                                     reliability,
-                                    delta=f"{confidence_interval*100:.0f}% CI"
+                                    delta="Model confidence"
                                 )
                         
                     except Exception as e:
@@ -420,31 +743,153 @@ with tab2:
     # Display detailed results if available
     if st.session_state.results is not None:
         st.markdown("---")
-        st.markdown("### 📊 Detailed Analysis Results")
+        st.markdown("### 🎯 Enhanced Event Classification Results")
         
         results = st.session_state.results
         
-        # Add enhanced result columns
-        results_display = results.copy()
-        results_display['Association Status'] = results_display['pred_prob'].apply(
-            lambda x: f"✅ ASSOCIATED ({x:.3f})" if x > threshold else f"❌ Not Associated ({x:.3f})"
-        )
-        results_display['Confidence Level'] = results_display['pred_prob'].apply(
-            lambda x: "🔥 Very High" if x > 0.9 else "🎯 High" if x > 0.7 else "⚡ Medium" if x > 0.5 else "📊 Low"
-        )
+        # Enhanced summary with confidence breakdown
+        st.markdown("#### 📊 Classification Summary")
         
-        # Interactive results table
+        col1, col2, col3, col4 = st.columns(4)
+        
+        # Confidence level breakdown
+        very_high = (results['confidence_level'] == 'Very High').sum()
+        high = (results['confidence_level'] == 'High').sum()
+        moderate = (results['confidence_level'] == 'Moderate').sum()
+        low = (results['confidence_level'] == 'Low').sum()
+        
+        with col1:
+            st.metric("🔥 Very High Confidence", very_high, delta=f"{(very_high/len(results)*100):.1f}%")
+        with col2:
+            st.metric("🎯 High Confidence", high, delta=f"{(high/len(results)*100):.1f}%")
+        with col3:
+            st.metric("⚡ Moderate Confidence", moderate, delta=f"{(moderate/len(results)*100):.1f}%")
+        with col4:
+            st.metric("📊 Low Confidence", low, delta=f"{(low/len(results)*100):.1f}%")
+        
+        # Detailed event analysis
+        st.markdown("#### 🔬 Individual Event Analysis")
+        
+        # Create expandable sections for each event
+        for idx, row in results.iterrows():
+            prob = row['pred_prob']
+            confidence = row['confidence_level']
+            classification = row['event_classification']
+            reasoning = row['physical_reasoning']
+            risk = row['risk_assessment']
+            
+            # Color code based on confidence
+            if confidence == 'Very High':
+                color = '#28a745'  # Green
+            elif confidence == 'High':
+                color = '#20c997'  # Teal
+            elif confidence == 'Moderate':
+                color = '#ffc107'  # Yellow
+            else:
+                color = '#dc3545'  # Red
+            
+            with st.expander(f"Event Pair {idx+1}: {classification} (Confidence: {prob:.3f})", expanded=False):
+                
+                # Two column layout for details
+                detail_col1, detail_col2 = st.columns(2)
+                
+                with detail_col1:
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, {color}20, {color}10); 
+                                padding: 1rem; border-radius: 10px; border-left: 4px solid {color};">
+                    <h5 style="color: {color}; margin-bottom: 0.5rem;">📊 Classification Details</h5>
+                    <p><strong>Probability:</strong> {prob:.4f}</p>
+                    <p><strong>Confidence:</strong> {confidence}</p>
+                    <p><strong>Status:</strong> {classification}</p>
+                    <p><strong>Risk Assessment:</strong> {risk}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                with detail_col2:
+                    st.markdown(f"""
+                    <div style="background: rgba(255, 255, 255, 0.1); 
+                                padding: 1rem; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                    <h5 style="color: #ff6b9d; margin-bottom: 0.5rem;">🔬 Physical Analysis</h5>
+                    <p style="font-size: 0.9em; line-height: 1.4;">{reasoning}</p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Show raw measurements
+                st.markdown("**🔢 Raw Measurements:**")
+                meas_col1, meas_col2, meas_col3 = st.columns(3)
+                
+                with meas_col1:
+                    st.metric("Time Difference", f"{row.get('dt', 0):.1f} s")
+                with meas_col2:
+                    st.metric("Angular Separation", f"{row.get('dtheta', 0):.3f} °")
+                with meas_col3:
+                    st.metric("Strength Ratio", f"{row.get('strength_ratio', 0):.2f}")
+                
+                # Event type information if available
+                if 'm1' in row and 'm2' in row:
+                    st.markdown(f"**🌌 Event Types:** {row['m1']} ↔ {row['m2']}")
+        
+        # Summary statistics
+        st.markdown("#### 📈 Statistical Summary")
+        
+        summary_col1, summary_col2 = st.columns(2)
+        
+        with summary_col1:
+            st.markdown("""
+            <div class="info-box">
+            <h5>🎯 Association Statistics</h5>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            total_associated = (results['pred_prob'] > threshold).sum()
+            association_rate = (total_associated / len(results)) * 100
+            avg_confidence = results['pred_prob'].mean()
+            
+            st.write(f"**Total Associations:** {total_associated} out of {len(results)} pairs")
+            st.write(f"**Association Rate:** {association_rate:.1f}%")
+            st.write(f"**Average Confidence:** {avg_confidence:.3f}")
+            st.write(f"**Threshold Used:** {threshold}")
+        
+        with summary_col2:
+            st.markdown("""
+            <div class="info-box">
+            <h5>🔍 Quality Assessment</h5>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            high_quality = ((results['confidence_level'] == 'Very High') | 
+                           (results['confidence_level'] == 'High')).sum()
+            low_risk = (results['risk_assessment'] == '🟢 High Confidence').sum()
+            
+            st.write(f"**High Quality Classifications:** {high_quality} ({(high_quality/len(results)*100):.1f}%)")
+            st.write(f"**Low Risk Classifications:** {low_risk} ({(low_risk/len(results)*100):.1f}%)")
+            st.write(f"**Standard Deviation:** {results['pred_prob'].std():.3f}")
+            st.write(f"**Confidence Range:** {results['pred_prob'].min():.3f} - {results['pred_prob'].max():.3f}")
+        
+        # Interactive results table with enhanced columns
+        st.markdown("#### 📋 Complete Results Table")
+        
+        display_columns = ['event_classification', 'pred_prob', 'confidence_level', 
+                          'confidence_description', 'risk_assessment', 'dt', 'dtheta', 'strength_ratio']
+        available_display_cols = [col for col in display_columns if col in results.columns]
+        
         st.dataframe(
-            results_display,
+            results[available_display_cols],
             use_container_width=True,
             column_config={
                 "pred_prob": st.column_config.ProgressColumn(
                     "Association Probability",
                     min_value=0.0,
                     max_value=1.0,
-                    format="%.3f"
+                    format="%.4f"
                 ),
-                "pred_label": st.column_config.CheckboxColumn("Associated"),
+                "event_classification": st.column_config.TextColumn("Classification"),
+                "confidence_level": st.column_config.TextColumn("Confidence Level"),
+                "confidence_description": st.column_config.TextColumn("Description"),
+                "risk_assessment": st.column_config.TextColumn("Risk Assessment"),
+                "dt": st.column_config.NumberColumn("Time Δ (s)", format="%.1f"),
+                "dtheta": st.column_config.NumberColumn("Angular Sep (°)", format="%.3f"),
+                "strength_ratio": st.column_config.NumberColumn("Strength Ratio", format="%.2f"),
             }
         )
 
@@ -467,13 +912,20 @@ with tab3:
                     "📈 Correlation Matrix",
                     "⏱️ Time Series Analysis",
                     "🌌 Sky Map (3D)",
-                    "📋 Statistical Summary"
+                    "📋 Statistical Summary",
+                    "🔥 Density Heatmap",
+                    "📈 Pair-wise Scatter",
+                    "🎪 Box Plot Analysis",
+                    "📊 Violin Plot Distributions",
+                    "🌊 Ridge Plot",
+                    "📉 ROC Curve Analysis"
                 ]
             )
             
             # Customization options
-            color_scheme = st.selectbox("Color scheme:", ["viridis", "plasma", "cividis", "magma"])
+            color_scheme = st.selectbox("Color scheme:", ["Viridis", "Plasma", "Cividis", "Magma", "Turbo", "Pink"])
             show_threshold = st.checkbox("Show threshold line", True)
+            interactive_mode = st.checkbox("Interactive mode", True)
             
         with viz_col2:
             if viz_type == "📊 Probability Distribution":
@@ -629,48 +1081,546 @@ with tab3:
                 else:
                     st.warning("Angular separation data not available for sky map")
             
+            elif viz_type == "🔥 Density Heatmap":
+                if 'dt' in results.columns and 'dtheta' in results.columns:
+                    fig = px.density_heatmap(
+                        results,
+                        x='dt',
+                        y='dtheta',
+                        z='pred_prob',
+                        title="🔥 Event Density Heatmap",
+                        labels={
+                            'dt': 'Time Difference (s)',
+                            'dtheta': 'Angular Separation (°)',
+                            'pred_prob': 'Association Probability'
+                        },
+                        color_continuous_scale=color_scheme.lower()
+                    )
+                    
+                    fig.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        height=500
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("Time and angular data required for heatmap")
+            
+            elif viz_type == "📈 Pair-wise Scatter":
+                numeric_cols = ['dt', 'dtheta', 'strength_ratio', 'pred_prob']
+                available_cols = [col for col in numeric_cols if col in results.columns]
+                
+                if len(available_cols) >= 2:
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        x_axis = st.selectbox("X-axis:", available_cols, index=0)
+                    with col2:
+                        y_axis = st.selectbox("Y-axis:", available_cols, index=1)
+                    
+                    fig = px.scatter(
+                        results,
+                        x=x_axis,
+                        y=y_axis,
+                        color='pred_prob',
+                        size='pred_prob',
+                        title=f"🎯 {x_axis.title()} vs {y_axis.title()}",
+                        color_continuous_scale=color_scheme.lower(),
+                        hover_data=['dt', 'dtheta', 'strength_ratio']
+                    )
+                    
+                    # Add trend line
+                    if st.checkbox("Show trend line", False):
+                        from sklearn.linear_model import LinearRegression
+                        X_trend = results[[x_axis]].values
+                        y_trend = results[y_axis].values
+                        reg = LinearRegression().fit(X_trend, y_trend)
+                        trend_y = reg.predict(X_trend)
+                        
+                        fig.add_trace(go.Scatter(
+                            x=results[x_axis],
+                            y=trend_y,
+                            mode='lines',
+                            name='Trend Line',
+                            line=dict(color='red', dash='dash')
+                        ))
+                    
+                    fig.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        height=500
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("Not enough numeric columns for scatter plot")
+            
+            elif viz_type == "🎪 Box Plot Analysis":
+                numeric_cols = ['dt', 'dtheta', 'strength_ratio', 'pred_prob']
+                available_cols = [col for col in numeric_cols if col in results.columns]
+                
+                if available_cols:
+                    selected_features = st.multiselect(
+                        "Select features to analyze:",
+                        available_cols,
+                        default=available_cols[:3]
+                    )
+                    
+                    if selected_features:
+                        # Create subplot for multiple box plots
+                        fig = make_subplots(
+                            rows=1, cols=len(selected_features),
+                            subplot_titles=selected_features,
+                            horizontal_spacing=0.1
+                        )
+                        
+                        for i, feature in enumerate(selected_features):
+                            fig.add_trace(
+                                go.Box(
+                                    y=results[feature],
+                                    name=feature,
+                                    boxpoints='outliers',
+                                    marker_color=px.colors.qualitative.Set3[i % len(px.colors.qualitative.Set3)]
+                                ),
+                                row=1, col=i+1
+                            )
+                        
+                        fig.update_layout(
+                            title="🎪 Feature Distribution Box Plots",
+                            height=500,
+                            showlegend=False,
+                            plot_bgcolor='rgba(0,0,0,0)',
+                            paper_bgcolor='rgba(0,0,0,0)'
+                        )
+                        
+                        st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("No numeric columns available for box plot")
+            
+            elif viz_type == "📊 Violin Plot Distributions":
+                numeric_cols = ['dt', 'dtheta', 'strength_ratio', 'pred_prob']
+                available_cols = [col for col in numeric_cols if col in results.columns]
+                
+                if available_cols:
+                    selected_feature = st.selectbox("Select feature:", available_cols)
+                    
+                    # Group by prediction label for comparison
+                    results_copy = results.copy()
+                    results_copy['prediction'] = results_copy['pred_prob'].apply(
+                        lambda x: 'Same Event' if x > threshold else 'Different Events'
+                    )
+                    
+                    fig = px.violin(
+                        results_copy,
+                        y=selected_feature,
+                        x='prediction',
+                        color='prediction',
+                        title=f"📊 {selected_feature.title()} Distribution by Prediction",
+                        color_discrete_map={
+                            'Same Event': '#ff6b9d',
+                            'Different Events': '#fad0c4'
+                        }
+                    )
+                    
+                    fig.update_layout(
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        height=500
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("No numeric columns available for violin plot")
+            
+            elif viz_type == "🌊 Ridge Plot":
+                # Create ridge plot using multiple histograms
+                numeric_cols = ['dt', 'dtheta', 'strength_ratio']
+                available_cols = [col for col in numeric_cols if col in results.columns]
+                
+                if available_cols:
+                    fig = make_subplots(
+                        rows=len(available_cols), cols=1,
+                        subplot_titles=[f"{col.title()} Distribution" for col in available_cols],
+                        vertical_spacing=0.15
+                    )
+                    
+                    for i, col in enumerate(available_cols):
+                        fig.add_trace(
+                            go.Histogram(
+                                x=results[col],
+                                name=col,
+                                opacity=0.7,
+                                nbinsx=30,
+                                marker_color=px.colors.sequential.Viridis[i * 3]
+                            ),
+                            row=i+1, col=1
+                        )
+                    
+                    fig.update_layout(
+                        title="🌊 Ridge Plot - Feature Distributions",
+                        height=200 * len(available_cols),
+                        showlegend=False,
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)'
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    st.warning("No numeric columns available for ridge plot")
+            
+            elif viz_type == "📉 ROC Curve Analysis":
+                if 'pred_prob' in results.columns:
+                    # For demonstration, create synthetic true labels based on features
+                    # In real scenario, you'd have ground truth labels
+                    st.info("🔬 **Demo Mode**: Generating synthetic ground truth for ROC analysis")
+                    
+                    # Create synthetic true labels based on multiple criteria
+                    synthetic_true = (
+                        (results['dt'] < results['dt'].median()) & 
+                        (results['dtheta'] < results['dtheta'].median()) &
+                        (results['strength_ratio'] > results['strength_ratio'].median())
+                    ).astype(int)
+                    
+                    # Calculate ROC curve points
+                    from sklearn.metrics import roc_curve, auc
+                    fpr, tpr, thresholds = roc_curve(synthetic_true, results['pred_prob'])
+                    roc_auc = auc(fpr, tpr)
+                    
+                    # Create ROC curve plot
+                    fig = go.Figure()
+                    
+                    fig.add_trace(go.Scatter(
+                        x=fpr, y=tpr,
+                        mode='lines',
+                        name=f'ROC Curve (AUC = {roc_auc:.3f})',
+                        line=dict(color='#ff6b9d', width=3)
+                    ))
+                    
+                    # Add diagonal reference line
+                    fig.add_trace(go.Scatter(
+                        x=[0, 1], y=[0, 1],
+                        mode='lines',
+                        name='Random Classifier',
+                        line=dict(color='gray', dash='dash')
+                    ))
+                    
+                    fig.update_layout(
+                        title='📉 ROC Curve Analysis',
+                        xaxis_title='False Positive Rate',
+                        yaxis_title='True Positive Rate',
+                        height=500,
+                        plot_bgcolor='rgba(0,0,0,0)',
+                        paper_bgcolor='rgba(0,0,0,0)'
+                    )
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # ROC statistics
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("AUC Score", f"{roc_auc:.3f}")
+                    with col2:
+                        optimal_idx = np.argmax(tpr - fpr)
+                        optimal_threshold = thresholds[optimal_idx]
+                        st.metric("Optimal Threshold", f"{optimal_threshold:.3f}")
+                    with col3:
+                        sensitivity = tpr[optimal_idx]
+                        specificity = 1 - fpr[optimal_idx]
+                        st.metric("Sensitivity", f"{sensitivity:.3f}")
+                else:
+                    st.warning("Prediction probabilities required for ROC analysis")
+            
             elif viz_type == "📋 Statistical Summary":
                 st.markdown("### 📊 Comprehensive Statistical Analysis")
                 
-                # Statistical summary
-                col1, col2 = st.columns(2)
+                # Main statistics tabs
+                stat_tab1, stat_tab2, stat_tab3, stat_tab4 = st.tabs([
+                    "📈 Descriptive Statistics", 
+                    "🔬 Hypothesis Testing", 
+                    "📊 Distribution Analysis", 
+                    "🔗 Correlation Analysis"
+                ])
                 
-                with col1:
-                    st.markdown("**🎯 Association Statistics:**")
-                    total_events = len(results)
-                    associated_events = (results['pred_prob'] > threshold).sum()
-                    association_rate = (associated_events / total_events) * 100
+                with stat_tab1:
+                    # Descriptive Statistics
+                    col1, col2, col3 = st.columns(3)
                     
-                    st.metric("Total Event Pairs", total_events)
-                    st.metric("Associated Pairs", f"{associated_events} ({association_rate:.1f}%)")
-                    st.metric("Mean Probability", f"{results['pred_prob'].mean():.3f}")
-                    st.metric("Std Deviation", f"{results['pred_prob'].std():.3f}")
-                
-                with col2:
-                    st.markdown("**📈 Distribution Analysis:**")
+                    with col1:
+                        st.markdown("**🎯 Association Statistics:**")
+                        total_events = len(results)
+                        associated_events = (results['pred_prob'] > threshold).sum()
+                        association_rate = (associated_events / total_events) * 100
+                        
+                        st.metric("Total Event Pairs", total_events)
+                        st.metric("Associated Pairs", f"{associated_events} ({association_rate:.1f}%)")
+                        st.metric("Mean Probability", f"{results['pred_prob'].mean():.3f}")
+                        st.metric("Std Deviation", f"{results['pred_prob'].std():.3f}")
                     
-                    # Quartiles
-                    q1 = results['pred_prob'].quantile(0.25)
-                    q2 = results['pred_prob'].quantile(0.50)
-                    q3 = results['pred_prob'].quantile(0.75)
+                    with col2:
+                        st.markdown("**📈 Distribution Properties:**")
+                        
+                        # Quartiles
+                        q1 = results['pred_prob'].quantile(0.25)
+                        q2 = results['pred_prob'].quantile(0.50)
+                        q3 = results['pred_prob'].quantile(0.75)
+                        
+                        st.metric("Q1 (25th percentile)", f"{q1:.3f}")
+                        st.metric("Q2 (Median)", f"{q2:.3f}")
+                        st.metric("Q3 (75th percentile)", f"{q3:.3f}")
+                        st.metric("IQR", f"{q3-q1:.3f}")
                     
-                    st.metric("Q1 (25th percentile)", f"{q1:.3f}")
-                    st.metric("Q2 (Median)", f"{q2:.3f}")
-                    st.metric("Q3 (75th percentile)", f"{q3:.3f}")
-                    st.metric("IQR", f"{q3-q1:.3f}")
+                    with col3:
+                        st.markdown("**🔍 Advanced Metrics:**")
+                        
+                        # Skewness and Kurtosis
+                        skewness = stats.skew(results['pred_prob'])
+                        kurtosis_val = stats.kurtosis(results['pred_prob'])
+                        
+                        st.metric("Skewness", f"{skewness:.3f}")
+                        st.metric("Kurtosis", f"{kurtosis_val:.3f}")
+                        
+                        # Coefficient of variation
+                        cv = results['pred_prob'].std() / results['pred_prob'].mean()
+                        st.metric("Coeff. of Variation", f"{cv:.3f}")
+                        
+                        # Range
+                        data_range = results['pred_prob'].max() - results['pred_prob'].min()
+                        st.metric("Range", f"{data_range:.3f}")
+                    
+                    # Confidence intervals
+                    st.markdown("**📊 Confidence Intervals:**")
+                    mean_prob = results['pred_prob'].mean()
+                    std_prob = results['pred_prob'].std()
+                    n = len(results)
+                    
+                    # Multiple confidence levels
+                    confidence_levels = [90, 95, 99]
+                    z_scores = [1.645, 1.96, 2.576]
+                    
+                    ci_data = []
+                    for conf_level, z in zip(confidence_levels, z_scores):
+                        margin_error = z * (std_prob / np.sqrt(n))
+                        ci_lower = mean_prob - margin_error
+                        ci_upper = mean_prob + margin_error
+                        ci_data.append({
+                            'Confidence Level': f"{conf_level}%",
+                            'Lower Bound': f"{ci_lower:.3f}",
+                            'Upper Bound': f"{ci_upper:.3f}",
+                            'Margin of Error': f"{margin_error:.3f}"
+                        })
+                    
+                    ci_df = pd.DataFrame(ci_data)
+                    st.dataframe(ci_df, use_container_width=True)
                 
-                # Confidence intervals
-                st.markdown("**📊 Confidence Intervals:**")
-                mean_prob = results['pred_prob'].mean()
-                std_prob = results['pred_prob'].std()
-                n = len(results)
+                with stat_tab2:
+                    # Hypothesis Testing
+                    st.markdown("**🧪 Hypothesis Testing Suite**")
+                    
+                    # Test selection
+                    test_type = st.selectbox(
+                        "Select hypothesis test:",
+                        [
+                            "One-sample t-test (μ = 0.5)",
+                            "Normality test (Shapiro-Wilk)",
+                            "Homogeneity test (Levene)",
+                            "Two-sample comparison",
+                            "Chi-square goodness of fit"
+                        ]
+                    )
+                    
+                    if test_type == "One-sample t-test (μ = 0.5)":
+                        # Test if mean probability significantly different from 0.5
+                        from scipy.stats import ttest_1samp
+                        
+                        t_stat, p_value = ttest_1samp(results['pred_prob'], 0.5)
+                        
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.metric("T-statistic", f"{t_stat:.4f}")
+                        with col2:
+                            st.metric("P-value", f"{p_value:.4f}")
+                        with col3:
+                            significance = "Significant" if p_value < 0.05 else "Not Significant"
+                            st.metric("Result (α=0.05)", significance)
+                        
+                        st.info(f"**Interpretation:** The mean probability ({mean_prob:.3f}) is {'significantly' if p_value < 0.05 else 'not significantly'} different from 0.5")
+                    
+                    elif test_type == "Normality test (Shapiro-Wilk)":
+                        from scipy.stats import shapiro
+                        
+                        # Sample for Shapiro-Wilk (max 5000 samples)
+                        sample_data = results['pred_prob'].sample(min(len(results), 5000))
+                        stat, p_value = shapiro(sample_data)
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("W-statistic", f"{stat:.4f}")
+                        with col2:
+                            st.metric("P-value", f"{p_value:.4f}")
+                        
+                        normality = "Normal" if p_value > 0.05 else "Not Normal"
+                        st.info(f"**Result:** Data appears to be **{normality}** (α=0.05)")
+                    
+                    elif test_type == "Two-sample comparison":
+                        # Compare high vs low probability groups
+                        high_prob = results[results['pred_prob'] > threshold]['pred_prob']
+                        low_prob = results[results['pred_prob'] <= threshold]['pred_prob']
+                        
+                        if len(high_prob) > 0 and len(low_prob) > 0:
+                            from scipy.stats import ttest_ind
+                            t_stat, p_value = ttest_ind(high_prob, low_prob)
+                            
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                st.metric("High Group Mean", f"{high_prob.mean():.3f}")
+                            with col2:
+                                st.metric("Low Group Mean", f"{low_prob.mean():.3f}")
+                            with col3:
+                                st.metric("P-value", f"{p_value:.4f}")
+                            
+                            st.info(f"**Result:** Groups are {'significantly' if p_value < 0.05 else 'not significantly'} different")
+                        else:
+                            st.warning("Need both high and low probability groups for comparison")
+                    
+                    elif test_type == "Chi-square goodness of fit":
+                        # Test if distribution follows uniform distribution
+                        from scipy.stats import chisquare
+                        
+                        # Create bins
+                        n_bins = 10
+                        observed, bin_edges = np.histogram(results['pred_prob'], bins=n_bins)
+                        expected = np.full(n_bins, len(results) / n_bins)
+                        
+                        chi2_stat, p_value = chisquare(observed, expected)
+                        
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.metric("Chi-square statistic", f"{chi2_stat:.4f}")
+                        with col2:
+                            st.metric("P-value", f"{p_value:.4f}")
+                        
+                        uniform_fit = "Uniform" if p_value > 0.05 else "Not Uniform"
+                        st.info(f"**Result:** Data {'fits' if p_value > 0.05 else 'does not fit'} a uniform distribution")
                 
-                # 95% confidence interval for mean
-                margin_error = 1.96 * (std_prob / np.sqrt(n))
-                ci_lower = mean_prob - margin_error
-                ci_upper = mean_prob + margin_error
+                with stat_tab3:
+                    # Distribution Analysis
+                    st.markdown("**📊 Distribution Fitting & Analysis**")
+                    
+                    # Distribution fitting
+                    dist_col1, dist_col2 = st.columns(2)
+                    
+                    with dist_col1:
+                        st.markdown("**Distribution Parameters:**")
+                        
+                        # Fit common distributions
+                        from scipy import stats as scipy_stats
+                        
+                        distributions = ['norm', 'beta', 'gamma', 'uniform']
+                        best_dist = None
+                        best_aic = np.inf
+                        
+                        fit_results = []
+                        for dist_name in distributions:
+                            dist = getattr(scipy_stats, dist_name)
+                            try:
+                                params = dist.fit(results['pred_prob'])
+                                log_likelihood = np.sum(dist.logpdf(results['pred_prob'], *params))
+                                aic = 2 * len(params) - 2 * log_likelihood
+                                
+                                fit_results.append({
+                                    'Distribution': dist_name.title(),
+                                    'AIC': f"{aic:.2f}",
+                                    'Log-Likelihood': f"{log_likelihood:.2f}",
+                                    'Parameters': str([f"{p:.3f}" for p in params])
+                                })
+                                
+                                if aic < best_aic:
+                                    best_aic = aic
+                                    best_dist = dist_name
+                            except:
+                                continue
+                        
+                        fit_df = pd.DataFrame(fit_results)
+                        st.dataframe(fit_df, use_container_width=True)
+                        
+                        if best_dist:
+                            st.success(f"**Best Fit:** {best_dist.title()} distribution (lowest AIC)")
+                    
+                    with dist_col2:
+                        st.markdown("**Outlier Detection:**")
+                        
+                        # Z-score method
+                        z_scores = np.abs(stats.zscore(results['pred_prob']))
+                        outliers_z = (z_scores > 3).sum()
+                        
+                        # IQR method
+                        q1 = results['pred_prob'].quantile(0.25)
+                        q3 = results['pred_prob'].quantile(0.75)
+                        iqr = q3 - q1
+                        lower_bound = q1 - 1.5 * iqr
+                        upper_bound = q3 + 1.5 * iqr
+                        outliers_iqr = ((results['pred_prob'] < lower_bound) | 
+                                       (results['pred_prob'] > upper_bound)).sum()
+                        
+                        st.metric("Z-score Outliers (|z| > 3)", outliers_z)
+                        st.metric("IQR Outliers", outliers_iqr)
+                        st.metric("Outlier Rate (Z-score)", f"{(outliers_z/len(results)*100):.1f}%")
+                        st.metric("Outlier Rate (IQR)", f"{(outliers_iqr/len(results)*100):.1f}%")
                 
-                st.info(f"95% CI for mean probability: [{ci_lower:.3f}, {ci_upper:.3f}]")
+                with stat_tab4:
+                    # Correlation Analysis
+                    st.markdown("**🔗 Advanced Correlation Analysis**")
+                    
+                    numeric_cols = ['dt', 'dtheta', 'strength_ratio', 'pred_prob']
+                    available_cols = [col for col in numeric_cols if col in results.columns]
+                    
+                    if len(available_cols) >= 2:
+                        # Correlation methods
+                        corr_method = st.selectbox(
+                            "Correlation method:",
+                            ["Pearson", "Spearman", "Kendall"]
+                        )
+                        
+                        # Calculate correlations
+                        if corr_method == "Pearson":
+                            corr_matrix = results[available_cols].corr(method='pearson')
+                        elif corr_method == "Spearman":
+                            corr_matrix = results[available_cols].corr(method='spearman')
+                        else:
+                            corr_matrix = results[available_cols].corr(method='kendall')
+                        
+                        # Display correlation matrix
+                        st.markdown(f"**{corr_method} Correlation Matrix:**")
+                        st.dataframe(corr_matrix.round(3), use_container_width=True)
+                        
+                        # Correlation significance testing
+                        st.markdown("**Correlation Significance Tests:**")
+                        
+                        sig_results = []
+                        for i, col1 in enumerate(available_cols):
+                            for col2 in available_cols[i+1:]:
+                                if corr_method == "Pearson":
+                                    corr_coef, p_val = stats.pearsonr(results[col1], results[col2])
+                                elif corr_method == "Spearman":
+                                    corr_coef, p_val = stats.spearmanr(results[col1], results[col2])
+                                else:
+                                    corr_coef, p_val = stats.kendalltau(results[col1], results[col2])
+                                
+                                significance = "***" if p_val < 0.001 else "**" if p_val < 0.01 else "*" if p_val < 0.05 else "ns"
+                                
+                                sig_results.append({
+                                    'Variable Pair': f"{col1} - {col2}",
+                                    'Correlation': f"{corr_coef:.3f}",
+                                    'P-value': f"{p_val:.4f}",
+                                    'Significance': significance
+                                })
+                        
+                        sig_df = pd.DataFrame(sig_results)
+                        st.dataframe(sig_df, use_container_width=True)
+                        
+                        st.caption("Significance: *** p<0.001, ** p<0.01, * p<0.05, ns = not significant")
+                    else:
+                        st.warning("Need at least 2 numeric columns for correlation analysis")
     
     else:
         st.info("👆 Run AI analysis first to generate visualizations")
