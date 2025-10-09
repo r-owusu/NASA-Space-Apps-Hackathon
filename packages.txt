@@ -1,2 +1,0 @@
-# Additional system packages for Streamlit Cloud
-# This file helps ensure all system dependencies are available
