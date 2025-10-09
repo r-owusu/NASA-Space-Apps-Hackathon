@@ -199,6 +199,88 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+# Progress Tracker
+st.markdown("## 📋 Analysis Progress Tracker")
+
+# Define analysis stages
+stages = [
+    {"name": "🤖 Model Selection", "key": "model_selected", "description": "Select and load AI model"},
+    {"name": "📊 Data Loading", "key": "data_loaded", "description": "Upload or generate analysis data"},
+    {"name": "🔬 Data Analysis", "key": "analysis_complete", "description": "Run AI analysis on event pairs"},
+    {"name": "📈 Results Ready", "key": "results_available", "description": "View visualizations and reports"},
+    {"name": "📥 Download Complete", "key": "download_ready", "description": "Export results and reports"}
+]
+
+# Check current progress
+progress_status = {}
+for stage in stages:
+    if stage["key"] == "model_selected":
+        progress_status[stage["key"]] = "model_selector" in st.session_state and st.session_state.get("model_selector") is not None
+    elif stage["key"] == "data_loaded":
+        progress_status[stage["key"]] = (st.session_state.get("current_data") is not None or 
+                                       st.session_state.get("uploaded_data") is not None or
+                                       st.session_state.get("demo_data") is not None)
+    elif stage["key"] == "analysis_complete":
+        progress_status[stage["key"]] = st.session_state.get("analysis_complete", False)
+    elif stage["key"] == "results_available":
+        progress_status[stage["key"]] = st.session_state.get("results") is not None
+    elif stage["key"] == "download_ready":
+        progress_status[stage["key"]] = st.session_state.get("results") is not None
+    else:
+        progress_status[stage["key"]] = False
+
+# Calculate overall progress
+completed_stages = sum(1 for status in progress_status.values() if status)
+total_stages = len(stages)
+progress_percentage = (completed_stages / total_stages) * 100
+
+# Display progress bar
+st.progress(progress_percentage / 100, text=f"Overall Progress: {completed_stages}/{total_stages} stages complete ({progress_percentage:.0f}%)")
+
+# Display stage indicators
+progress_cols = st.columns(len(stages))
+
+for i, (stage, col) in enumerate(zip(stages, progress_cols)):
+    with col:
+        is_completed = progress_status[stage["key"]]
+        is_current = (not is_completed and 
+                     (i == 0 or progress_status[stages[i-1]["key"]]))
+        
+        # Determine status icon and color
+        if is_completed:
+            status_icon = "✅"
+            status_color = "#28a745"  # Green
+            status_text = "Complete"
+        elif is_current:
+            status_icon = "🔄"
+            status_color = "#ffc107"  # Yellow
+            status_text = "In Progress"
+        else:
+            status_icon = "⭕"
+            status_color = "#6c757d"  # Gray
+            status_text = "Pending"
+        
+        # Display stage card
+        st.markdown(f"""
+        <div style="
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border: 2px solid {status_color};
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        ">
+            <div style="font-size: 2rem; margin-bottom: 0.5rem;">{status_icon}</div>
+            <div style="font-weight: bold; margin-bottom: 0.5rem; color: {status_color};">{stage['name']}</div>
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 0.5rem;">{stage['description']}</div>
+            <div style="font-size: 0.75rem; color: {status_color}; font-weight: bold;">{status_text}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+st.markdown("---")
+
 # Sidebar
 st.sidebar.markdown("## 🎛️ Analysis Controls")
 
@@ -273,6 +355,29 @@ with st.sidebar.expander("🔬 Advanced Options"):
     confidence_interval = st.slider("Confidence Interval", 0.90, 0.99, 0.95, 0.01)
     show_debug = st.checkbox("Show Debug Info")
     auto_refresh = st.checkbox("Auto-refresh Real-time Data")
+
+# Clear functionality in sidebar
+st.sidebar.markdown("### 🗑️ Clear Data")
+
+clear_sidebar_col1, clear_sidebar_col2 = st.sidebar.columns(2)
+
+with clear_sidebar_col1:
+    if st.button("🗑️ Clear Results", key="sidebar_clear_results", help="Clear analysis results only"):
+        # Clear only analysis results
+        if 'results' in st.session_state:
+            del st.session_state.results
+        if 'analysis_complete' in st.session_state:
+            del st.session_state.analysis_complete
+        st.sidebar.success("Results cleared!")
+        st.rerun()
+
+with clear_sidebar_col2:
+    if st.button("🔄 Reset All", key="sidebar_reset_all", help="Clear all data and reset session"):
+        # Clear all session state
+        for key in list(st.session_state.keys()):
+            del st.session_state[key]
+        st.sidebar.success("Session reset!")
+        st.rerun()
 
 # Main content tabs
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -364,6 +469,7 @@ with tab1:
             
             df = pd.DataFrame(data)
             st.session_state.current_data = df
+            st.session_state.data_loaded = True  # Mark data loading stage as complete
             
             st.markdown(f"""
             <div class="success-box">
@@ -398,6 +504,7 @@ with tab1:
                     
                     df = pd.read_csv(uploaded_file, sep=separator, encoding=encoding)
                     st.session_state.current_data = df
+                    st.session_state.data_loaded = True  # Mark data loading stage as complete
                     
                     st.markdown(f"""
                     <div class="success-box">
@@ -423,6 +530,7 @@ with tab1:
                     
                     df = pd.read_excel(uploaded_file, sheet_name=selected_sheet)
                     st.session_state.current_data = df
+                    st.session_state.data_loaded = True  # Mark data loading stage as complete
                     
                     st.markdown(f"""
                     <div class="success-box">
@@ -454,6 +562,7 @@ with tab1:
                             df = pd.DataFrame([json_data])
                     
                     st.session_state.current_data = df
+                    st.session_state.data_loaded = True  # Mark data loading stage as complete
                     
                     st.markdown(f"""
                     <div class="success-box">
@@ -475,6 +584,7 @@ with tab1:
                 try:
                     df = pd.read_parquet(uploaded_file)
                     st.session_state.current_data = df
+                    st.session_state.data_loaded = True  # Mark data loading stage as complete
                     
                     st.markdown(f"""
                     <div class="success-box">
@@ -668,6 +778,7 @@ with tab2:
                         # Run prediction
                         results = predict_df(df, model, scaler, threshold)
                         st.session_state.results = results
+                        st.session_state.analysis_complete = True  # Mark analysis stage as complete
                         
                         if results is not None:
                             st.markdown("""
@@ -892,6 +1003,153 @@ with tab2:
                 "strength_ratio": st.column_config.NumberColumn("Strength Ratio", format="%.2f"),
             }
         )
+        
+        # Download functionality section
+        st.markdown("#### 📥 Download Analysis Results")
+        
+        download_col1, download_col2, download_col3 = st.columns(3)
+        
+        with download_col1:
+            # CSV Download
+            csv_data = results.to_csv(index=False)
+            st.download_button(
+                label="📊 Download CSV",
+                data=csv_data,
+                file_name=f"multimessenger_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        
+        with download_col2:
+            # JSON Download
+            json_data = results.to_json(orient='records', indent=2, date_format='iso')
+            st.download_button(
+                label="📋 Download JSON",
+                data=json_data,
+                file_name=f"multimessenger_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+                mime="application/json",
+                use_container_width=True
+            )
+        
+        with download_col3:
+            # Detailed Report Download
+            def generate_detailed_report(results_df):
+                """Generate a comprehensive analysis report"""
+                timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                
+                # Calculate summary statistics
+                total_pairs = len(results_df)
+                same_events = (results_df['event_classification'] == 'Same Event').sum()
+                different_events = (results_df['event_classification'] == 'Different Events').sum()
+                high_conf = ((results_df['confidence_level'] == 'Very High') | 
+                           (results_df['confidence_level'] == 'High')).sum()
+                avg_prob = results_df['pred_prob'].mean()
+                
+                report = f"""# Multimessenger AI Analysis Report
+Generated: {timestamp}
+
+## Executive Summary
+- **Total Event Pairs Analyzed**: {total_pairs}
+- **Same Events Detected**: {same_events} ({same_events/total_pairs*100:.1f}%)
+- **Different Events**: {different_events} ({different_events/total_pairs*100:.1f}%)
+- **High Confidence Classifications**: {high_conf} ({high_conf/total_pairs*100:.1f}%)
+- **Average Association Probability**: {avg_prob:.3f}
+
+## Confidence Distribution
+- **Very High Confidence**: {(results_df['confidence_level'] == 'Very High').sum()} events
+- **High Confidence**: {(results_df['confidence_level'] == 'High').sum()} events
+- **Moderate Confidence**: {(results_df['confidence_level'] == 'Moderate').sum()} events
+- **Low Confidence**: {(results_df['confidence_level'] == 'Low').sum()} events
+
+## Statistical Analysis
+- **Mean Probability**: {results_df['pred_prob'].mean():.4f}
+- **Standard Deviation**: {results_df['pred_prob'].std():.4f}
+- **Minimum Probability**: {results_df['pred_prob'].min():.4f}
+- **Maximum Probability**: {results_df['pred_prob'].max():.4f}
+- **Median Probability**: {results_df['pred_prob'].median():.4f}
+
+## Detailed Classifications
+"""
+                
+                for idx, row in results_df.iterrows():
+                    report += f"""
+### Event Pair {idx+1}
+- **Classification**: {row['event_classification']}
+- **Probability**: {row['pred_prob']:.4f}
+- **Confidence Level**: {row['confidence_level']}
+- **Risk Assessment**: {row['risk_assessment']}
+"""
+                    if 'physical_reasoning' in row:
+                        report += f"- **Physical Reasoning**: {row['physical_reasoning']}\n"
+                    if 'dt' in row:
+                        report += f"- **Time Difference**: {row['dt']:.2f} seconds\n"
+                    if 'dtheta' in row:
+                        report += f"- **Angular Separation**: {row['dtheta']:.4f} degrees\n"
+                
+                report += f"""
+
+## Summary & Recommendations
+
+Based on the analysis of {total_pairs} event pairs:
+
+1. **Data Quality**: {high_conf/total_pairs*100:.1f}% of classifications have high confidence
+2. **Association Rate**: {same_events/total_pairs*100:.1f}% of events appear to be associated
+3. **Follow-up Priority**: Focus on {(results_df['confidence_level'] == 'Very High').sum()} very high confidence events
+
+Generated by Multimessenger AI Platform
+NASA Space Apps Challenge Project
+"""
+                return report
+            
+            report_text = generate_detailed_report(results)
+            st.download_button(
+                label="📝 Download Report",
+                data=report_text,
+                file_name=f"multimessenger_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md",
+                mime="text/markdown",
+                use_container_width=True
+            )
+        
+        # Clear functionality section
+        st.markdown("---")
+        st.markdown("#### 🗑️ Clear Analysis Data")
+        
+        clear_col1, clear_col2 = st.columns([1, 1])
+        
+        with clear_col1:
+            if st.button("🗑️ Clear Results", type="secondary", use_container_width=True):
+                # Clear session state
+                if 'results' in st.session_state:
+                    del st.session_state.results
+                if 'uploaded_data' in st.session_state:
+                    del st.session_state.uploaded_data
+                if 'demo_data' in st.session_state:
+                    del st.session_state.demo_data
+                if 'analysis_complete' in st.session_state:
+                    del st.session_state.analysis_complete
+                st.success("✅ Analysis results cleared!")
+                st.rerun()
+        
+        with clear_col2:
+            if st.button("🔄 Reset All Data", type="primary", use_container_width=True):
+                # Clear all session state
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                st.success("✅ All data reset! Page will refresh...")
+                st.rerun()
+    
+    else:
+        st.markdown("---")
+        st.info("👆 **Run AI analysis first to see results and download options**")
+        
+        # Clear functionality for when no results exist
+        st.markdown("#### 🗑️ Clear Session Data")
+        if st.button("🔄 Reset Session", type="secondary", use_container_width=True):
+            # Clear all session state
+            for key in list(st.session_state.keys()):
+                del st.session_state[key]
+            st.success("✅ Session reset! Page will refresh...")
+            st.rerun()
 
 with tab3:
     st.markdown("## 📈 Advanced Visualizations")

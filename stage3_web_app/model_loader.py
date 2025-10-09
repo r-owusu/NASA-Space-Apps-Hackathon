@@ -10,7 +10,7 @@ def list_model_files(models_dir=DEFAULT_MODELS_DIR):
     # Check local saved_models directory
     if os.path.exists(models_dir):
         local_models = [f for f in os.listdir(models_dir) if f.endswith('.pkl')]
-        model_files.extend([(f, models_dir) for f in local_models])
+        model_files.extend(local_models)
     
     # Check stage2 models directory (relative to current file)
     current_dir = Path(__file__).parent
@@ -18,10 +18,10 @@ def list_model_files(models_dir=DEFAULT_MODELS_DIR):
     
     if stage2_models_dir.exists():
         stage2_models = [f.name for f in stage2_models_dir.glob("*.pkl")]
-        model_files.extend([(f, str(stage2_models_dir)) for f in stage2_models])
+        model_files.extend(stage2_models)
     
-    # Return just the filenames for display, but keep track of paths
-    return model_files
+    # Remove duplicates and return unique filenames
+    return list(set(model_files))
 
 def load_model_by_name(name, models_dir=DEFAULT_MODELS_DIR):
     """Load model from the correct directory"""
