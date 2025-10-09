@@ -3,7 +3,7 @@
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/your-app-url)
 
 ## 🚀 Live website
-**[Launch the Multimessenger AI Observatory]cosmic-messenger.streamlit.app/
+**[Launch the Multimessenger AI Observatory](cosmic-messenger.streamlit.app/)
 **
 
 ## 🎯 Overview
