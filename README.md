@@ -1,6 +1,6 @@
 # 🌌 NASA Space Apps Hackathon - Multimessenger AI Observatory
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/your-app-url)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cosmic-messenger.streamlit.app/)
 
 ## 🚀 Live website
 cosmic-messenger.streamlit.app/
