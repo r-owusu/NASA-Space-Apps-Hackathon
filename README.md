@@ -26,7 +26,7 @@ An advanced AI-powered platform for analyzing multimessenger astronomical events
 - **Data Processing**: SciPy for statistical analysis
 
 ## 🚀 Quick Start
-1. Visit the [live demo](https://your-streamlit-cloud-url)
+1. Visit the [live demo](https://youtu.be/WusLjm_1Ub4)
 2. Select an AI model from the sidebar
 3. Generate demo data or upload your own CSV
 4. Run the AI analysis
