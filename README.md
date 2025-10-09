@@ -1,10 +1,10 @@
 # 🌌 NASA Space Apps Hackathon - Multimessenger AI Observatory
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/your-app-url)
+##[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/your-app-url)
 
 ## 🚀 Live website
-**[Launch the Multimessenger AI Observatory](cosmic-messenger.streamlit.app/)
-**
+cosmic-messenger.streamlit.app/
+
 
 ## 🎯 Overview
 An advanced AI-powered platform for analyzing multimessenger astronomical events, built for the NASA Space Apps Challenge 2025. This application combines gravitational waves, neutrinos, gamma rays, and optical observations to identify correlated cosmic events using machine learning.
