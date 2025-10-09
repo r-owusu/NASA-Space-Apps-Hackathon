@@ -2,8 +2,6 @@
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://cosmic-messenger.streamlit.app/)
 
-## 🚀 Live website
-cosmic-messenger.streamlit.app/
 
 
 ## 🎯 Overview
